@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
    res.send("teddyBear server is running");
 });
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.kjf5ogd.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -29,7 +29,7 @@ const client = new MongoClient(uri, {
 async function run() {
    try {
       // Connect the client to the server	(optional starting in v4.7)
-      await client.connect();
+      client.connect();
       // Send a ping to confirm a successful connection
       const toyCategory = client.db("toyshopDB").collection("toys");
 
@@ -41,9 +41,29 @@ async function run() {
          const result = await toyCategory.insertOne(newTeddy);
          res.send(result);
       });
+
+      //   sorting by email
+      app.get("/toys", async (req, res) => {
+         console.log("ites working");
+         let query = {};
+         if (req.query?.email) {
+            query = { email: req.query.email };
+         }
+         const result = await toyCategory.find(query).toArray();
+         res.send(result);
+      });
+
       // READ
       app.get("/toys", async (req, res) => {
          const result = await toyCategory.find({}).toArray();
+         res.send(result);
+      });
+
+      //   delete
+      app.delete("/toys/:id", async (req, res) => {
+         const id = req.params.id;
+         const deleteOne = { _id: new ObjectId(id) };
+         const result = await toyCategory.deleteOne(deleteOne);
          res.send(result);
       });
 
