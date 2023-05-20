@@ -44,7 +44,6 @@ async function run() {
 
       //   sorting by email
       app.get("/toys", async (req, res) => {
-         console.log("ites working");
          let query = {};
          if (req.query?.email) {
             query = { email: req.query.email };
@@ -55,7 +54,9 @@ async function run() {
 
       // READ
       app.get("/toys", async (req, res) => {
-         const result = await toyCategory.find({}).toArray();
+         const cursor = toyCategory.find({}).limit(20);
+         const result = await cursor.toArray();
+
          res.send(result);
       });
 
@@ -64,6 +65,33 @@ async function run() {
          const id = req.params.id;
          const deleteOne = { _id: new ObjectId(id) };
          const result = await toyCategory.deleteOne(deleteOne);
+         res.send(result);
+      });
+
+      //   data fine by id
+      app.get("/toys/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: new ObjectId(id) };
+         const result = await toyCategory.findOne(query);
+         res.send(result);
+      });
+      //   update
+      app.put("/toys/:id", async (req, res) => {
+         const id = req.params.id;
+         const filter = { _id: new ObjectId(id) };
+         const options = { upsert: true };
+         const toy = req.body;
+         console.log(toy, id);
+         const updateToy = {
+            $set: {
+               price: toy.price,
+               quantity: toy.quantity,
+               name: toy.name,
+               photo: toy.photo,
+               discription: toy.details,
+            },
+         };
+         const result = await toyCategory.updateOne(filter, updateToy, options);
          res.send(result);
       });
 
