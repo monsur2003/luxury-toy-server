@@ -42,6 +42,15 @@ async function run() {
          res.send(result);
       });
 
+      //   category
+      app.get("/category", async (req, res) => {
+         const category = req.query.category;
+         let query = { category: category };
+
+         const result = await toyCategory.find(query).toArray();
+         res.send(result);
+      });
+
       //   sorting by email
       app.get("/toys", async (req, res) => {
          let query = {};
