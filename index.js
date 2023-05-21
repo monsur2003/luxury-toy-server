@@ -29,15 +29,14 @@ const client = new MongoClient(uri, {
 async function run() {
    try {
       // Connect the client to the server	(optional starting in v4.7)
-      client.connect();
+      // client.connect();
       // Send a ping to confirm a successful connection
       const toyCategory = client.db("toyshopDB").collection("toys");
 
       //   post
       app.post("/toys", async (req, res) => {
-         console.log("toys sent");
          const newTeddy = req.body;
-         console.log(newTeddy);
+
          const result = await toyCategory.insertOne(newTeddy);
          res.send(result);
       });
@@ -62,11 +61,34 @@ async function run() {
       });
 
       // READ
-      app.get("/toys", async (req, res) => {
-         const cursor = toyCategory.find({}).limit(20);
-         const result = await cursor.toArray();
+      // app.get("/toys", async (req, res) => {
+      //    const cursor = toyCategory.find({}).limit(20);
+      //    const result = await cursor.toArray();
 
-         res.send(result);
+      //    res.send(result);
+      // });
+
+      app.get("/toys", async (req, res) => {
+         const { sortBy, name } = req.query;
+
+         let query = toyCategory.find({});
+
+         if (name) {
+            query = query.where("name", new RegExp(name, "i"));
+         }
+
+         if (sortBy === "asc") {
+            query = query.sort({ price: 1 });
+         } else if (sortBy === "desc") {
+            query = query.sort({ price: -1 });
+         }
+
+         try {
+            const toys = await query.limit(20).exec();
+            res.send(toys);
+         } catch (error) {
+            console.error("Error retrieving toys:", error);
+         }
       });
 
       //   delete
@@ -90,7 +112,7 @@ async function run() {
          const filter = { _id: new ObjectId(id) };
          const options = { upsert: true };
          const toy = req.body;
-         console.log(toy, id);
+
          const updateToy = {
             $set: {
                price: toy.price,
